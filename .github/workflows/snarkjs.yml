@@ -19,7 +19,13 @@ jobs:
           name: "circom"
           version: "latest"
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
       - run: |
+          npm install
           mkdir out
           circom circuits/guardianhash.circom --r1cs --sym --json --wasm -l node_modules -o out
 
@@ -53,17 +59,11 @@ jobs:
           cd out
           curl -O https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_${{ env.POWER_OF_2 }}.ptau
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
       - run: |
-          npm install
           cd out
-          snarkjs groth16 setup guardianhash.r1cs ppot_0080_${{ env.POWER_OF_2 }}.ptau guardianhash_0000.zkey
-          snarkjs zkey contribute guardianhash_0000.zkey guardianhash_0001.zkey --name="1st Contributor Name" -v
-          snarkjs zkey export verificationkey guardianhash_0001.zkey verification_key.json
+          npx snarkjs groth16 setup guardianhash.r1cs ppot_0080_${{ env.POWER_OF_2 }}.ptau guardianhash_0000.zkey
+          npx snarkjs zkey contribute guardianhash_0000.zkey guardianhash_0001.zkey --name="1st Contributor Name" -v
+          npx snarkjs zkey export verificationkey guardianhash_0001.zkey verification_key.json
 
       - uses: actions/upload-artifact@v4
         with:
