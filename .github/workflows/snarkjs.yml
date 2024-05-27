@@ -14,8 +14,8 @@ jobs:
       - uses: actions/checkout@v4
       - run: |
           wget https://github.com/iden3/circom/releases/latest/download/circom-linux-amd64
-          mv circom-linux-amd64 circom
-          chmod +x circom
+          mv ./circom-linux-amd64 ./circom
+          chmod +x ./circom
           ./circom circuits/guardianhash.circom --r1cs --sym --json --wasm -l node_modules -o out
 
       - name: Count lines in file and adjust
