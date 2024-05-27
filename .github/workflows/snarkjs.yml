@@ -1,8 +1,7 @@
 name: snarkjs
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 jobs:
   snarkjs:
