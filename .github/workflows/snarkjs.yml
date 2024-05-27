@@ -19,7 +19,9 @@ jobs:
           name: "circom"
           version: "latest"
 
-      - run: circom circuits/guardianhash.circom --r1cs --sym --json --wasm -l node_modules -o out
+      - run: |
+          mkdir out
+          circom circuits/guardianhash.circom --r1cs --sym --json --wasm -l node_modules -o out
 
       - name: Count lines in file and adjust
         id: count_lines
