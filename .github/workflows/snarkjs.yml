@@ -12,11 +12,14 @@ jobs:
       POWER_OF_2: 1
     steps:
       - uses: actions/checkout@v4
-      - run: |
-          wget https://github.com/iden3/circom/releases/latest/download/circom-linux-amd64
-          mv ./circom-linux-amd64 ./circom
-          chmod +x ./circom
-          ./circom circuits/guardianhash.circom --r1cs --sym --json --wasm -l node_modules -o out
+
+      - uses: supplypike/setup-bin@v4
+        with:
+          uri: "https://github.com/iden3/circom/releases/latest/download/circom-linux-amd64"
+          name: "circom"
+          version: "latest"
+
+      - run: circom circuits/guardianhash.circom --r1cs --sym --json --wasm -l node_modules -o out
 
       - name: Count lines in file and adjust
         id: count_lines
