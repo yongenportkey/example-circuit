@@ -1,0 +1,66 @@
+name: snarkjs
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  snarkjs:
+    runs-on: ubuntu-latest
+    env:
+      ADJUSTED_COUNT: 4
+      POWER_OF_2: 1
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          wget https://github.com/iden3/circom/releases/latest/download/circom-linux-amd64
+          mv circom-linux-amd64 circom
+          chmod +x circom
+          ./circom circuits/guardianhash.circom --r1cs --sym --json --wasm -l node_modules -o out
+
+      - name: Count lines in file and adjust
+        id: count_lines
+        run: |
+          LINE_COUNT=$(wc -l < out/guardianhash_constraints.json)
+          ADJUSTED_COUNT=$((LINE_COUNT - ${{ env.ADJUSTED_COUNT }}))
+          echo "ADJUSTED_COUNT=$ADJUSTED_COUNT" >> $GITHUB_ENV
+
+      - name: Find least power of 2 larger than adjusted count
+        id: power_of_2
+        run: |
+          ADJUSTED_COUNT=${{ env.ADJUSTED_COUNT }}
+          POWER_OF_2=${{ env.POWER_OF_2 }}
+          while [ $POWER_OF_2 -le $ADJUSTED_COUNT ]; do
+            POWER_OF_2=$((POWER_OF_2 * 2))
+          done
+          echo "POWER_OF_2=$POWER_OF_2" >> $GITHUB_ENV
+
+      - name: Cache ppot ptau
+        id: cache-ptau
+        uses: actions/cache@v4
+        with:
+          path: out/ppot_0080_${{ env.POWER_OF_2 }}.ptau
+          key: ${{ env.POWER_OF_2 }}
+
+      - name: Download ppot ptau
+        if: steps.cache-ptau.outputs.cache-hit != 'true'
+        run: |
+          cd out
+          curl -O https://pse-trusted-setup-ppot.s3.eu-central-1.amazonaws.com/pot28_0080/ppot_0080_${{ env.POWER_OF_2 }}.ptau
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - run: |
+          npm install
+          cd out
+          snarkjs groth16 setup guardianhash.r1cs ppot_0080_${{ env.POWER_OF_2 }}.ptau guardianhash_0000.zkey
+          snarkjs zkey contribute guardianhash_0000.zkey guardianhash_0001.zkey --name="1st Contributor Name" -v
+          snarkjs zkey export verificationkey guardianhash_0001.zkey verification_key.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: output
+          path: out/
