@@ -75,7 +75,10 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: guardianhash_cpp
-      - run: make
+      - name: Install deps
+        run: sudo apt-get install -y nlohmann-json3-dev libgmp-dev nasm
+      - name: Build executable
+        run: make
       - name: Upload executable
         uses: actions/upload-artifact@v4
         with:
@@ -97,7 +100,14 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - uses: actions/download-artifact@v4
+      - name: Download json
+        uses: actions/download-artifact@v4
+        with:
+          name: json
+          path: out
+
+      - name: Download r1cs
+        uses: actions/download-artifact@v4
         with:
           name: r1cs
           path: out
@@ -155,3 +165,9 @@ jobs:
         with:
           name: zkey
           path: out/guardianhash_0001.zkey
+
+      - name: Upload verification key
+        uses: actions/upload-artifact@v4
+        with:
+          name: verification_key
+          path: out/verification_key.json
