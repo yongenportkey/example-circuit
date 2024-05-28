@@ -5,11 +5,8 @@ on:
     branches: [main]
 
 jobs:
-  snarkjs:
+  circom:
     runs-on: ubuntu-latest
-    env:
-      ADJUSTED_COUNT: 4
-      POWER_OF_2: 1
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -33,7 +30,86 @@ jobs:
       - name: Compile circuit
         run: |
           mkdir out
-          circom circuits/guardianhash.circom --r1cs --sym --json --wasm -l node_modules -o out
+          circom circuits/guardianhash.circom --r1cs --sym --json --wasm --c -l node_modules -o out
+
+      - name: Upload guardianhash_js
+        uses: actions/upload-artifact@v4
+        with:
+          name: guardianhash_js
+          path: out/guardianhash_js
+
+      - name: Upload guardianhash_wasm
+        uses: actions/upload-artifact@v4
+        with:
+          name: guardianhash_wasm
+          path: out/guardianhash_js/guardianhash.wasm
+
+      - name: Upload guardianhash_cpp
+        uses: actions/upload-artifact@v4
+        with:
+          name: guardianhash_cpp
+          path: out/guardianhash_cpp
+
+      - name: Upload r1cs
+        uses: actions/upload-artifact@v4
+        with:
+          name: r1cs
+          path: out/guardianhash.r1cs
+
+      - name: Upload sym
+        uses: actions/upload-artifact@v4
+        with:
+          name: sym
+          path: out/guardianhash.sym
+
+      - name: Upload json
+        uses: actions/upload-artifact@v4
+        with:
+          name: json
+          path: out/guardianhash_constraints.json
+
+  cpp:
+    needs: [circom]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: guardianhash_cpp
+      - run: make
+      - name: Upload executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: executable
+          path: guardianhash
+      - name: Upload dat
+        uses: actions/upload-artifact@v4
+        with:
+          name: dat
+          path: guardianhash.dat
+
+  ceremony:
+    needs: [circom]
+    runs-on: ubuntu-latest
+    env:
+      ADJUSTED_COUNT: 4
+      POWER_OF_2: 1
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: r1cs
+          path: out
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install node_modules
+        run: npm install
 
       - name: Count number of constraints
         id: count_lines
@@ -74,38 +150,8 @@ jobs:
           npx snarkjs zkey contribute guardianhash_0000.zkey guardianhash_0001.zkey --name="1st Contributor Name" -v -e="Some random text"
           npx snarkjs zkey export verificationkey guardianhash_0001.zkey verification_key.json
 
-      - name: Upload guardianhash_js
-        uses: actions/upload-artifact@v4
-        with:
-          name: guardianhash_js
-          path: out/guardianhash_js
-
-      - name: Upload guardianhash_wasm
-        uses: actions/upload-artifact@v4
-        with:
-          name: guardianhash_wasm
-          path: out/guardianhash_js/guardianhash.wasm
-
       - name: Upload zkey
         uses: actions/upload-artifact@v4
         with:
           name: zkey
           path: out/guardianhash_0001.zkey
-
-      - name: Upload r1cs
-        uses: actions/upload-artifact@v4
-        with:
-          name: r1cs
-          path: out/guardianhash.r1cs
-
-      - name: Upload sym
-        uses: actions/upload-artifact@v4
-        with:
-          name: sym
-          path: out/guardianhash.sym
-
-      - name: Upload json
-        uses: actions/upload-artifact@v4
-        with:
-          name: json
-          path: out/guardianhash_constraints.json
