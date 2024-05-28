@@ -80,6 +80,12 @@ jobs:
           name: guardianhash_js
           path: out/guardianhash_js
 
+      - name: Upload guardianhash_wasm
+        uses: actions/upload-artifact@v4
+        with:
+          name: guardianhash_wasm
+          path: out/guardianhash_js/guardianhash.wasm
+
       - name: Upload zkey
         uses: actions/upload-artifact@v4
         with:
