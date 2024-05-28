@@ -74,8 +74,32 @@ jobs:
           npx snarkjs zkey contribute guardianhash_0000.zkey guardianhash_0001.zkey --name="1st Contributor Name" -v -e="Some random text"
           npx snarkjs zkey export verificationkey guardianhash_0001.zkey verification_key.json
 
-      - name: Upload artifacts
+      - name: Upload guardianhash_js
         uses: actions/upload-artifact@v4
         with:
-          name: output
-          path: out/
+          name: guardianhash_js
+          path: out/guardianhash_js
+
+      - name: Upload zkey
+        uses: actions/upload-artifact@v4
+        with:
+          name: zkey
+          path: out/guardianhash_0001.zkey
+
+      - name: Upload r1cs
+        uses: actions/upload-artifact@v4
+        with:
+          name: r1cs
+          path: out/guardianhash.r1cs
+
+      - name: Upload sym
+        uses: actions/upload-artifact@v4
+        with:
+          name: sym
+          path: out/guardianhash.sym
+
+      - name: Upload json
+        uses: actions/upload-artifact@v4
+        with:
+          name: json
+          path: out/guardianhash_constraints.json
